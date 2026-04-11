@@ -45,6 +45,13 @@ public class JourneyServiceImpl implements JourneyService {
 
 		// 1. Validate user
 		User user = getLoggedInUser();
+		
+		// RULE: must have at least one contact
+	    if (contactRepository.findByUser(user).isEmpty()) {
+	        throw new BadRequestException(
+	            "Add at least one emergency contact before starting a journey"
+	        );
+	    }
 
 		// 2. Prevent multiple active journeys
 		if (journeyRepository.findByUserIdAndStatus(user.getId(), JourneyStatus.ONGOING).isPresent()) {

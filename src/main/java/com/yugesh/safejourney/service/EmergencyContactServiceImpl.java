@@ -120,8 +120,14 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
         var auth = SecurityContextHolder.getContext()
                 .getAuthentication();
 
-        if (auth == null || !(auth instanceof User)) {
+        if (auth == null ) {
             throw new UnauthorizedException("User not authenticated");
+        }
+        
+        Object principal=auth.getPrincipal();
+        
+        if(!(principal instanceof User)) {
+        	throw new UnauthorizedException("User not authenticated");
         }
 
         return (User) auth.getPrincipal();
