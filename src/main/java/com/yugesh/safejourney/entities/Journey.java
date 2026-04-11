@@ -46,6 +46,12 @@ public class Journey {
 	private LocalDateTime startTime;
 
     private LocalDateTime endTime;
+    
+    @Column(name = "start_location")
+    private String startLocation;
+
+    @Column(name = "end_location")
+    private String endLocation;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -58,7 +64,7 @@ public class Journey {
     @PrePersist
     public void prePersist() {
         startTime = LocalDateTime.now();
-        status = JourneyStatus.STARTED;
+        status = JourneyStatus.ONGOING;
     }
 
 }

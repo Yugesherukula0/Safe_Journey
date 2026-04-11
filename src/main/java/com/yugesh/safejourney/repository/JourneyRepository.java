@@ -1,5 +1,7 @@
 package com.yugesh.safejourney.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,12 +15,12 @@ public interface JourneyRepository extends JpaRepository<Journey , Long>{
 //	Unique
 //	Public-facing (shared with others)
 //	Used to track journey status
-	public Journey findByTrackingToken(Long trackingToken);
+	Optional<Journey> findByTrackingToken(String trackingToken);
 	
 	
 //	Check if user already has active journey
 //	Prevent multiple tracking sessions
-	public Journey findByUserIdAndStatus(Long userId, JourneyStatus status);
+	Optional<Journey> findByUserIdAndStatus(Long userId, JourneyStatus status);
 
 
 }

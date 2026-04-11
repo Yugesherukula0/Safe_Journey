@@ -6,12 +6,17 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.yugesh.safejourney.config.JwtUtil;
 import com.yugesh.safejourney.dto.LoginRequest;
 import com.yugesh.safejourney.dto.OtpRequest;
 import com.yugesh.safejourney.dto.OtpVerifyRequest;
 import com.yugesh.safejourney.dto.RegisterRequest;
 import com.yugesh.safejourney.entities.OtpVerification;
 import com.yugesh.safejourney.entities.User;
+import com.yugesh.safejourney.exception.BadRequestException;
+import com.yugesh.safejourney.exception.ConflictException;
+import com.yugesh.safejourney.exception.ResourceNotFoundException;
+import com.yugesh.safejourney.exception.UnauthorizedException;
 import com.yugesh.safejourney.repository.OtpRepository;
 import com.yugesh.safejourney.repository.UserRepository;
 
@@ -27,6 +32,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final OtpRepository otpRepository;
     private final EmailService emailService;
+    private final JwtUtil jwtUtil;
 
     // REGISTER
     public String register(RegisterRequest request) {
@@ -35,12 +41,12 @@ public class AuthService {
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
 
         if (existingUser.isPresent()) {
-            throw new RuntimeException("Email already registered");
+            throw new ConflictException("Email already registered");
         }
         
         // check if phone number already exists
         if (userRepository.findByPhoneNumber(request.getPhoneNumber()).isPresent()) {
-            throw new RuntimeException("Phone number already registered");
+            throw new ConflictException("Phone number already registered");
         }
 
         // create user
@@ -61,14 +67,14 @@ public class AuthService {
     public String login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         // check password
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new RuntimeException("Invalid password");
+            throw new UnauthorizedException("Invalid credentials");
         }
 
-        return "Login successful";
+        return jwtUtil.generateToken(user.getEmail());
     }
     
     public String sendOtp(OtpRequest request) {
@@ -95,14 +101,14 @@ public class AuthService {
     public String verifyOtp(OtpVerifyRequest request) {
 
         OtpVerification otpData = otpRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("OTP not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("OTP not found"));
 
         if (otpData.getExpiryTime().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("OTP expired");
+            throw new BadRequestException("OTP expired");
         }
 
         if (!otpData.getOtp().equals(request.getOtp())) {
-            throw new RuntimeException("Invalid OTP");
+            throw new BadRequestException("Invalid OTP");
         }
 
         otpRepository.deleteByEmail(request.getEmail());

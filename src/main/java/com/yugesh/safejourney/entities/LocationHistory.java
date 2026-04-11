@@ -34,6 +34,6 @@ public class LocationHistory {
 
     @PrePersist
     public void prePersist() {
-        recordedAt = LocalDateTime.now();
+        this.recordedAt = LocalDateTime.now();
     }
 }

@@ -6,9 +6,15 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
+	
+	private final JwtFilter jwtFilter;
 	
 	
 	// password hashing
@@ -24,13 +30,20 @@ public class SecurityConfig {
 	        http
 	            .csrf(csrf -> csrf.disable())
 	            .authorizeHttpRequests(auth -> auth
-	                .requestMatchers("/api/auth/**",
-	                	    "/swagger-ui/**",
-	                	    "/swagger-ui.html",
-	                	    "/v3/api-docs/**").permitAll() // ✅ allow OTP + login
-	                .anyRequest().authenticated()
-	            );
-
+	            		.requestMatchers(
+	            			    "/api/auth/**",
+	            			    "/swagger-ui/**",
+	            			    "/swagger-ui.html",
+	            			    "/v3/api-docs/**"
+	            			).permitAll()
+	            			.requestMatchers("/api/contacts/**").authenticated() // 🔥 FIX
+	            			.requestMatchers("/api/location/**").permitAll()
+	            			.anyRequest().authenticated()
+	            )
+//	        We use addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+//	        to ensure the JWT is validated before Spring tries to authenticate/authorize the request
+	        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+	        
 	        return http.build();
 	    }
 }

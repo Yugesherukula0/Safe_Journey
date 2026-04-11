@@ -21,4 +21,7 @@ public class EmailService {
 
         mailSender.send(message);
     }
+    public void sendAlertEmail(String toEmail, String message) {
+        System.out.println("ALERT EMAIL → " + message);
+    }
 }
