@@ -160,13 +160,27 @@ public class JourneyServiceImpl implements JourneyService {
 	}
 
 	private User getLoggedInUser() {
-		return (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+	    Object principal = SecurityContextHolder.getContext()
+	            .getAuthentication()
+	            .getPrincipal();
+
+	    if (principal instanceof User) {
+	        return (User) principal;
+	    }
+
+	    throw new RuntimeException("User not authenticated properly");
 	}
 
 	// ================= MAPPER =================
 	private JourneyResponse map(Journey j) {
 		return JourneyResponse.builder().trackingToken(j.getTrackingToken()).status(j.getStatus().name())
 				.startTime(j.getStartTime()).endTime(j.getEndTime()).build();
+	}
+	@Override
+	public boolean hasActiveJourney(Long userId) {
+	    return journeyRepository
+	            .existsByUserIdAndStatus(userId, JourneyStatus.ONGOING);
 	}
 
 	

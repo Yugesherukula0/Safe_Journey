@@ -21,6 +21,8 @@ public interface JourneyRepository extends JpaRepository<Journey , Long>{
 //	Check if user already has active journey
 //	Prevent multiple tracking sessions
 	Optional<Journey> findByUserIdAndStatus(Long userId, JourneyStatus status);
+	
+	boolean existsByUserIdAndStatus(Long userId, JourneyStatus status);
 
 
 }

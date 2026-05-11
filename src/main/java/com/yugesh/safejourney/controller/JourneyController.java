@@ -1,12 +1,21 @@
 package com.yugesh.safejourney.controller;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.yugesh.safejourney.dto.AlertRequest;
 import com.yugesh.safejourney.dto.EndJourneyRequest;
 import com.yugesh.safejourney.dto.JourneyResponse;
 import com.yugesh.safejourney.dto.StartJourneyRequest;
+import com.yugesh.safejourney.entities.User;
 import com.yugesh.safejourney.service.JourneyService;
 
 import jakarta.validation.Valid;
@@ -49,5 +58,15 @@ public class JourneyController {
             @PathVariable String token) {
 
         return ResponseEntity.ok(journeyService.getJourneyByToken(token));
+    }
+    
+    @GetMapping("/status")
+    public ResponseEntity<?> getJourneyStatus(Authentication authentication) {
+
+        User user = (User) authentication.getPrincipal();
+
+        boolean active = journeyService.hasActiveJourney(user.getId());
+
+        return ResponseEntity.ok(Map.of("active", active));
     }
 }

@@ -1,12 +1,14 @@
 package com.yugesh.safejourney.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.yugesh.safejourney.dto.LocationRequest;
 import com.yugesh.safejourney.dto.LocationResponse;
+import com.yugesh.safejourney.entities.EmergencyContact;
 import com.yugesh.safejourney.entities.Journey;
 import com.yugesh.safejourney.entities.JourneyStatus;
 import com.yugesh.safejourney.entities.LocationHistory;
@@ -14,6 +16,7 @@ import com.yugesh.safejourney.entities.User;
 import com.yugesh.safejourney.exception.BadRequestException;
 import com.yugesh.safejourney.exception.ResourceNotFoundException;
 import com.yugesh.safejourney.exception.UnauthorizedException;
+import com.yugesh.safejourney.repository.EmergencyContactRepository;
 import com.yugesh.safejourney.repository.JourneyRepository;
 import com.yugesh.safejourney.repository.LocationHistoryRepository;
 
@@ -25,6 +28,8 @@ public class LocationServiceImpl implements LocationService {
 
     private final JourneyRepository journeyRepository;
     private final LocationHistoryRepository locationRepository;
+    private final EmergencyContactRepository contactRepository;
+    private final EmailService emailService;
 
     @Override
     public void saveLocation(LocationRequest request) {
@@ -61,6 +66,7 @@ public class LocationServiceImpl implements LocationService {
                 .longitude(request.getLongitude())
                 .journey(journey)
                 .build();
+        sendLocationToContacts(journey, request.getLatitude(), request.getLongitude());
 
         locationRepository.save(location);
     }
@@ -87,6 +93,29 @@ public class LocationServiceImpl implements LocationService {
                 .longitude(latest.getLongitude())
                 .recordedAt(latest.getRecordedAt())
                 .build();
+    }
+    
+    private void sendLocationToContacts(Journey journey, Double lat, Double lon) {
+
+        String mapLink = "https://www.google.com/maps?q=" + lat + "," + lon;
+
+        String message = "🚨 Safe Journey Update\n\n"
+                + "Live Location:\n" + mapLink;
+
+        List<EmergencyContact> contacts =
+                contactRepository.findByUser(journey.getUser());
+
+        for (EmergencyContact contact : contacts) {
+
+            if (contact.getEmail() != null) {
+
+                try {
+                    emailService.sendAlertEmail(contact.getEmail(), message);
+                } catch (Exception e) {
+                    System.out.println("Email failed: " + contact.getEmail());
+                }
+            }
+        }
     }
     
     private User getLoggedInUser() {

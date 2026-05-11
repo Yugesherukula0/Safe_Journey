@@ -22,6 +22,12 @@ public class EmailService {
         mailSender.send(message);
     }
     public void sendAlertEmail(String toEmail, String message) {
-        System.out.println("ALERT EMAIL → " + message);
+
+        SimpleMailMessage mail = new SimpleMailMessage();
+        mail.setTo(toEmail);
+        mail.setSubject("🚨 Safe Journey Live Location");
+        mail.setText(message);
+
+        mailSender.send(mail);
     }
 }

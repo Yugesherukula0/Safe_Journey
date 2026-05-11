@@ -14,4 +14,6 @@ public interface JourneyService {
     JourneyResponse triggerAlert(AlertRequest request);
 
     JourneyResponse getJourneyByToken(String trackingToken);
+    
+    boolean hasActiveJourney(Long userId);
 }
